@@ -1,0 +1,94 @@
+# Rules ported from seqeralabs/RustQC-benchmarks (MIT), tests/rna/rustqc/*.nf.test.
+# Layout: reference dir = snapshots/rna/small (upstream tools), candidate dir = snapshots/rna/small/rustqc.
+# RSeQC outputs gain a `test.` prefix in the candidate; the rename below encodes that.
+name: rustqc-rna
+ignore: ["rustqc/*"]   # the candidate snapshots live under the reference root
+outputs:
+  # dupRadar: count columns only (rate and RPKM columns skipped), abs 10 / rel 2%
+  - pattern: "dupradar/dupMatrix.txt"
+    rename: ["dupradar/dupMatrix.txt", "dupradar/test_dupMatrix.txt"]
+    comparator: table
+    options: {key: [ID], ignore_columns: [4, 5, 6, 7, 10, 11, 12, 13], atol: 10, rtol: 0.02}
+  # intercept and slope within 10% (count differences propagate)
+  - pattern: "dupradar/intercept_slope.txt"
+    rename: ["dupradar/intercept_slope.txt", "dupradar/test_intercept_slope.txt"]
+    comparator: fields
+    options:
+      fields:
+        - {name: intercept, regex: 'dupRadar Int.*: (\S+)$', rtol: 0.10}
+        - {name: slope, regex: 'dupRadar Sl.*: (\S+)$', rtol: 0.10}
+  # featureCounts (gene-level run): coordinate columns skipped, abs 2 / rel 1%
+  - pattern: "featurecounts_geneid/test.featureCounts.tsv"
+    rename: ["featurecounts_geneid/", "featurecounts/"]
+    comparator: table
+    options: {skip_prefixes: ["#"], key: [Geneid], ignore_columns: [1, 2, 3, 4, 5], atol: 2, rtol: 0.01, header_check: false}
+  - pattern: "featurecounts_geneid/test.featureCounts.tsv.summary"
+    rename: ["featurecounts_geneid/", "featurecounts/"]
+    comparator: table
+    options: {key: [Status], atol: 50, rtol: 0.05, header_check: false}
+  # RSeQC
+  - pattern: "rseqc/bam_stat/bam_stat.txt"
+    rename: ['^(.*/)([^/]+)$', '\1test.\2']
+    comparator: text
+    options: {ignore_prefixes: ["Load BAM", "processing"]}
+  - pattern: "rseqc/infer_experiment/infer_experiment.txt"
+    rename: ['^(.*/)([^/]+)$', '\1test.\2']
+    comparator: text
+    options: {ignore_prefixes: ["This is"]}
+  - pattern: "rseqc/read_duplication/*.xls"
+    rename: ['^(.*/)([^/]+)$', '\1test.\2']
+    comparator: exact
+  # fraction columns differ by design (gene-model resolution); labels and Total Reads must match
+  - pattern: "rseqc/read_distribution/read_distribution.txt"
+    rename: ['^(.*/)([^/]+)$', '\1test.\2']
+    comparator: structural
+    options: {delimiter: whitespace, skip_prefixes: ["="], key: 0, exact_lines: ["^Total Reads"]}
+  - pattern: "rseqc/inner_distance/inner_distance_freq.txt"
+    rename: ['^(.*/)([^/]+)$', '\1test.\2']
+    comparator: table
+    options: {header: false, rtol: 0.15}
+  # per-read distances differ for ~2% of reads: same read IDs and row count only
+  - pattern: "rseqc/inner_distance/inner_distance.txt"
+    rename: ['^(.*/)([^/]+)$', '\1test.\2']
+    comparator: structural
+    options: {key: 0, check_numeric: false}
+  - pattern: "rseqc/junction_annotation/junction.bed"
+    rename: ['^(.*/)([^/]+)$', '\1test.\2']
+    comparator: text
+    options: {sort: true}
+  - pattern: "rseqc/junction_annotation/junction.xls"
+    rename: ['^(.*/)([^/]+)$', '\1test.\2']
+    comparator: table
+    options: {ignore_order: true}
+  # stochastic subsampling: only the 100% point is deterministic
+  - pattern: "rseqc/junction_saturation/junctionSaturation_plot.r"
+    rename: ['^(.*/)([^/]+)$', '\1test.\2']
+    comparator: fields
+    options:
+      fields:
+        - {name: known@100%, regex: '^y=c\((.*)\)\s*$', split: ",", pick: last}
+        - {name: all@100%, regex: '^z=c\((.*)\)\s*$', split: ",", pick: last}
+        - {name: novel@100%, regex: '^w=c\((.*)\)\s*$', split: ",", pick: last}
+  # TIN: random subsampling; summary within 5% / abs 1, per-transcript scores structural only
+  - pattern: "rseqc/tin/test.summary.txt"
+    comparator: table
+    options: {ignore_columns: [0], rtol: 0.05, atol: 1.0}
+  - pattern: "rseqc/tin/test.tin.xls"
+    comparator: structural
+    options: {key: 0, check_numeric: false}
+  - pattern: "preseq/test.lc_extrap.txt"
+    comparator: table
+    options: {rtol: 0.05, atol: 1.0}
+  # Qualimap: only the total gene-body coverage profile is compared upstream
+  - pattern: "qualimap/raw_data_qualimapReport/coverage_profile_along_genes_(total).txt"
+    comparator: table
+    options: {skip_prefixes: ["#"], header: false, rtol: 0.05, atol: 0.5}
+  # samtools
+  - pattern: "samtools/test.flagstat"
+    comparator: text
+  - pattern: "samtools/test.idxstats"
+    comparator: text
+  - pattern: "samtools/test.stats"
+    comparator: text
+    options: {ignore_prefixes: ["#"]}
+accepted_divergences: []

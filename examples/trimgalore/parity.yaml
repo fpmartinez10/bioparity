@@ -1,0 +1,18 @@
+# Trim Galore 2.x (Rust) vs 0.6.11 (Perl). Needs Docker. Not yet run end-to-end (no daemon when written).
+name: trimgalore-2.3.0-vs-0.6.11
+extends: trimgalore
+reference:
+  label: trim_galore 0.6.11
+  container: quay.io/biocontainers/trim-galore:0.6.11--hdfd78af_0
+  command: "trim_galore {params} -o {outdir} {inputs.reads}"
+  version_command: "trim_galore --version"
+candidate:
+  label: trim_galore 2.3.0
+  container: quay.io/biocontainers/trim-galore:2.3.0--hf1b6044_0
+  command: "trim_galore {params} -o {outdir} {inputs.reads}"
+  version_command: "trim_galore --version"
+cases:
+  - {id: se_default, inputs: {reads: reads.fq.gz}, params: ""}
+  - {id: se_q30, inputs: {reads: reads.fq.gz}, params: "--quality 30"}
+  - {id: se_len50, inputs: {reads: reads.fq.gz}, params: "--length 50"}
+accepted_divergences: []

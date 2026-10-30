@@ -1,0 +1,7 @@
+# Conventions seen in dnncha/turbo-picard (MIT) tools/parity_compare.py: Picard metrics files
+# skip `#` comment blocks and compare floats to 1e-5; BAM/SAM outputs need samtools (not bundled).
+name: picard-metrics
+outputs:
+  - {pattern: "*.metrics.txt", comparator: metrics, options: {header: true, atol: 0.00001}}
+  - {pattern: "*_metrics", comparator: metrics, options: {header: true, atol: 0.00001}}
+accepted_divergences: []

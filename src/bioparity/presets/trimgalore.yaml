@@ -1,0 +1,10 @@
+# Trim Galore v2 (Rust) vs v0.6.x (Perl). Idea from the v2 CI: compare decompressed output
+# against a pinned upstream release. Rules written from scratch (upstream is GPL-3).
+name: trimgalore
+outputs:
+  - {pattern: "*_trimmed.fq.gz", comparator: fastq}
+  - {pattern: "*_val_[12].fq.gz", comparator: fastq}
+  - pattern: "*_trimming_report.txt"
+    comparator: text
+    options: {ignore_lines: ["^Command line parameters", "^Cutadapt version", "^Trim Galore version", "^Python version", "^Number of cores", "^Output file", "^This is cutadapt", "^Running time"]}
+accepted_divergences: []

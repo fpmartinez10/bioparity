@@ -1,0 +1,7 @@
+bioparity ports comparison rules (tolerances and normalisation choices), not code, from:
+
+- seqeralabs/RustQC-benchmarks (MIT): per-tool tolerances in presets/rustqc-rna.yaml
+- dnncha/turbo-picard (MIT): metrics tolerance conventions and the mutation-test idea
+- fulcrumgenomics/fgumi (MIT): outer-join metrics comparison and per-stage presets idea
+- FelixKrueger/TrimGalore (GPL-3.0): the idea of comparing decompressed output against a
+  pinned upstream release; no code was copied.
